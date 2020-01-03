@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Oct  6 18:16:01 2019
+
+@author: amazinger
+"""
+
+import sys, pygame
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+class Maze:
+    def __init__(self, width, height):
+        if width < 3:
+            print("error: width should not less than 3")
+            width = 3
+        if height < 3:
+            print("error: height should not less than 3")
+            height = 3
+        self.width = width
+        self.height = height
+        self.start = [1, 1]
+        self.end = [self.width - 2, self.height - 2]
+        self.binary = np.zeros([self.width, self.height], dtype=int)
+
+    def buildMaze(self, mode='random'):
+        if mode == 'random':
+            print('this method have not been implemented yet!')
+
+        if mode == 's':  # build a maze with s-shape path
+            random.seed = 5
+            gap_h = int(self.height / 2)
+            #            gap_w =
+            self.binary = np.ones([self.width, self.height], dtype=int)
+            for i in range(2, self.width - 2):
+                self.binary[2, i] = 0
+                self.binary[gap_h, i] = 0
+                self.binary[self.height - 3, i] = 0
+            self.binary[1, 1] = 0
+            self.binary[2, 1] = 0
+            self.binary[self.width - 2, self.height - 2] = 0
+            self.binary[self.height - 3, self.width - 2] = 0
+            for i in range(3, gap_h):
+                self.binary[i, self.width - 3] = 0
+            for i in range(gap_h + 1, self.height - 3):
+                self.binary[i, 2] = 0
+            for i in range(1, self.width - 1):
+                for j in range(1, self.width - 1):
+                    if self.binary[i, j] == 1:
+                        self.binary[i, j] = random.choice([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
+
+        if mode == 'simple':  # 5*5
+            self.binary = np.ones([self.width, self.height], dtype=int)
+            for j in range(1, 4):
+                self.binary[1, j] = 0
+                self.binary[3, j] = 0
+            self.binary[2, 3] = 0
+            self.end = [3, 1]
+
+        return None
+
+    def showMaze(self, mode='binary'):
+        if mode == 'binary':
+            print(self.binary)
+        if mode == '#':
+            for i in range(0, self.height):
+                for j in range(0, self.width):
+                    if i == self.start[0] and j == self.start[1]:
+                        toprint = "A"
+                    elif i == self.end[0] and j == self.end[1]:
+                        toprint = "B"
+                    elif self.binary[i, j] == 1:
+                        toprint = "#"
+                    elif self.binary[i, j] == 0:
+                        toprint = "o"
+                    print(toprint, end="  ")
+                print("\n")
+
+        if mode == 'color':
+            print('this method have not been implemented yet!')
+
+        return None
+
+    def point2index(self, point):
+        return point[0] * self.width + point[1]
+
+    def index2point(self, index):
+        return [int(index / self.width), int(index % self.width)]
+
+    def mazepValue(self, point):
+        return self.binary[point[0], point[1]]
+
+    def mazeiValue(self, index):
+        return self.binary[index2point(index)[0], index2point(index)[1]]
+
+    def step(self, point, action):
+        if action == 0:
+            return [point[0] - 1, point[1]]
+        elif action == 1:
+            return [point[0] + 1, point[1]]
+        elif action == 2:
+            return [point[0], point[1] - 1]
+        elif action == 3:
+            return [point[0], point[1] + 1]
+
+    def showSolution(self, oldS):
+        print("This is the solved maze:")
+        for i in range(0, self.height):
+            for j in range(0, self.width):
+                if [i, j] in oldS:
+                    toprint = "-"
+                elif i == self.start[0] and j == self.start[1]:
+                    toprint = "A"
+                elif i == self.end[0] and j == self.end[1]:
+                    toprint = "B"
+                elif self.binary[i, j] == 1:
+                    toprint = "#"
+                elif self.binary[i, j] == 0:
+                    toprint = "o"
+                print(toprint, end="  ")
+            print("\n")
+
+    # class State:
+
+    # Reward table R(x,y)
+    # Transition table T(x,y,a) = (x', y')
+    def get_reward_table(self):
+        nState = self.width * self.height
+        nAction = 4
+        reward_table = -10000 * np.ones([nAction, nState])  # if can not pass, then very low reward
+        for i in range(0, self.width):  # i is current state
+            for j in range(0, self.height):  # 0: up, 1: down, 2: left, 3: right
+                # if the current state is reachable and action feasible:
+                curP = [i,j]
+                if self.mazepValue(curP) == 0:
+                    nextP = self.step(curP, j)
+                    if self.mazepValue(nextP) == 0:
+                        reward_table[j, i] = -10
+                    if nextP == self.end:
+                        reward_table[j, i] = 10000
+        return reward_table
+
+    def get_transition_table(self):
+        nState = self.width * self.height
+        nAction = 4
+        transition_table = np.zeros(([nAction, nState, nState]))
+        for i in range(0, nAction):
+            for j in range(0, nState):
+                for k in range(0, nState):
+                    curP = self.index2point(j)
+                    if self.mazepValue(curP) == 0:
+                        nextP = self.actionONpoint(curP, i)
+                        if self.mazepValue(nextP) == 0 and self.index2point(k) == nextP:  # if (s,a) is feasible
+                            transition_table[i, j, k] = 1
+        return transition_table
+
+    def iteration(self, discount):
+        R = self.get_reward_table()
+        T = self.get_transition_table()
+        Cthreshold = 1E-5  # the cirteria for converge
+        diff = 0
+        count = 0
+        Vtmp = -1E6
+        Q = np.copy(R)
+        nState = R.shape[1]
+        nAction = R.shape[0]
+        Aopt = np.zeros((nState))
+        Vopt = np.zeros((nState))
+        Qrecord = np.zeros(((1, Q.shape[0], Q.shape[1])))
+        Qrecord[0, :, :] = np.copy(Q)
+        while diff > Cthreshold or count < 100:
+            Vopt_old = np.copy(Vopt)
+            count = count + 1
+            postQ = np.zeros((nAction, nState))
+            for s in range(0, nState):
+                Vtmp = -1E6
+                for a in range(0, nAction):
+                    if Q[a, s] > Vtmp:
+                        Vtmp = Q[a, s]
+                        Aopt[s] = a
+                        Vopt[s] = Q[a, s]
+                #                if s == 358:
+                #                    print (Vopt[s])
+                postQ += discount * T[:, :, s] * Vopt[s]
+            Q = R + postQ
+            Qrecord = np.append(Qrecord, Q[np.newaxis, :], axis=0)
+            diff = np.max(np.abs(Vopt - Vopt_old))
+            #            print (Q)
+            print(count)
+        print("converged!")
+        return Q, Aopt, Qrecord
+
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    myMaze = Maze(20, 20)
+    myMaze.buildMaze("s")
+    myMaze.showMaze("#")
+
+    print(myMaze.get_reward_table())
+    print(myMaze.get_transition_table().shape)
+    T = myMaze.get_transition_table()
+    discount = 0.1
+    Q, Aopt, Qrecord = myMaze.iteration(discount)
+    Qnew = Q[np.newaxis, :]
+    curS = myMaze.start
+    oldS = []
+    niter = 0
+
+    # Solve maze according to the action table
+    while curS != myMaze.end:
+        print(curS)
+        niter = niter + 1
+        curSID = myMaze.point2index(curS)
+        print(curSID)
+        curA = Aopt[curSID]
+        print("iteration %s" % (niter), "the action is %s" % (curA))
+        oldS.append(curS)
+        curS = myMaze.actionONpoint(curS, curA)
+
+    print("reach B!! Win the game")
+    myMaze.showSolution(oldS)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
