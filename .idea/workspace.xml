@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="2b5b4938-5356-448b-a5fc-c7a5c0ad0c92" name="Default Changelist" comment="" />
+    <list default="true" id="2b5b4938-5356-448b-a5fc-c7a5c0ad0c92" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/CEM_Pendulum.py" beforeDir="false" afterPath="$PROJECT_DIR$/old/CEM_Pendulum.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/My_maze" beforeDir="false" afterPath="$PROJECT_DIR$/old/My_maze" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cartepole.py" beforeDir="false" afterPath="$PROJECT_DIR$/old/cartepole.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/myPendulum.py" beforeDir="false" afterPath="$PROJECT_DIR$/old/myPendulum.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/old/test.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,9 +22,19 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1Sjnjvi1nkumes1qbnw6NE8Zn7N" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Python" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/old" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -44,7 +61,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/My_maze" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/old/My_maze" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -80,7 +97,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/myPendulum.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/old/myPendulum.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -116,7 +133,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/old/test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -136,7 +153,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="_new_keywords" value="&quot;&quot;" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/myPendulum.py&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/old/myPendulum.py&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
@@ -170,6 +187,17 @@
       <updated>1572086010787</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
