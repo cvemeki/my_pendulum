@@ -1,5 +1,8 @@
 import gym
 import numpy as np
+
+import helper
+
 import matplotlib.patches as patches
 import seaborn as sns; sns.set()
 import random
@@ -42,16 +45,18 @@ Reward:
 No discretize. just feed the observation into the network
 '''
 
-test_global = 1234
-
 
 class DQNSolver:
+
     def __init__(self, observation_dim, action_number):
         self.exploration_rate = EXPLORATION_MAX
         self.observation_dim = observation_dim
         self.action_number = action_number
-        # self.memory = set()
         self.memory = deque(maxlen=1000000)
+        self.actionSpace =
+        self.stateSpace =
+        self.action =
+        self.state =
 
     def build(self):
         self.model = Sequential()
@@ -80,15 +85,32 @@ class DQNSolver:
         self.exploration_rate *= EXPLORATION_DECAY
         self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
 
-    def act(self, state):
+    def explore(self, state):
         if np.random.rand() < self.exploration_rate:
             return random.randrange(self.action_number)
         q_values = self.model.predict(state)
         return np.argmax(q_values[0])   ## best action index at current state
 
-    def act_test(self, state):
-        q_values = self.model.predict(state)
+    def setActionSpace(self, actionSpace):
+        self.actionSpace = actionSpace
+
+    def setStateSpace(self, stateSpace):
+        self.stateSpace = stateSpace
+
+    # Interface with the environment
+    def obvToState(self, obv):  # interface with the environment
+        self.state =
+
+    def actionToImpact(self):  # interface with the environment
+        impact = self.action
+        return impact
+
+    def act(self):
+        q_values = self.model.predict(self.state)
         return np.argmax(q_values[0])
+
+    def learn(self):
+
 
 
 def pendulum():
@@ -102,12 +124,12 @@ def pendulum():
         while True:
             step += 1
             # env.render()
-            actionID = dqn_solver.act(state)
+            actionID = dqn_solver.explore(state)
             action = action_space[actionID]
             action = np.array([action])
             state_next, reward, terminal, info = env.step(action)
             cumReward.append(cumReward[len(cumReward)-1]+reward)
-            theta = trigo2angle(state_next[0], state_next[1])
+            theta = helper.trigo2angle(state_next[0], state_next[1])
             # reward = reward + 10 - 10/(1+np.exp(-100*(reward**2-3**2)))
             terminal = 0
             # if theta > np.pi / 3 or theta < -np.pi / 3 or step >= 500:
@@ -130,20 +152,6 @@ def pendulum():
             break
     env.close()
 
-
-def trigo2angle(cos, sin):  # from sin and cos to [-pi, pi]
-    if sin > 0:  # [0, pi]
-        theta = np.arccos(cos)  # arccos returns angle[0, pi]
-    else:
-        theta = -np.arccos(cos)
-    return theta
-
-
-def visualize_space(space):
-    x = np.arange(len(space))
-    plt.step(x, np.abs(space), where= 'post')
-    plt.grid()
-    return None
 
 
 def generate_Q(theta_space, dtheta_space, action_space, dqn_solver):
@@ -218,8 +226,8 @@ def real_Q(theta_space, dtheta_space, action_space):
         for j, dtheta in enumerate(dtheta_space):
             for k, action in enumerate(action_space):
                 R[i,j,k] = -(theta**2 + 0.1*dtheta**2 + 1*action**2)
-                newState = pendulumModel([theta, dtheta], action)
-                newStateID = state2index(newState)
+                newState = helper.pendulumModel([theta, dtheta], action)
+                newStateID = helper.state2index(newState, theta_space, dtheta_space)
                 T[i, j, k, :] = newStateID
     ## bellman iteration
     step = 0
@@ -251,49 +259,7 @@ def real_Q(theta_space, dtheta_space, action_space):
 
     return R, T, real_Q
 
-
-def state2index(state):
-    theta = state[0]
-    dtheta = state[1]
-    thetaID = discretize(theta, theta_space)
-    dthetaID = discretize(dtheta, dtheta_space)
-    return np.array([thetaID, dthetaID])  # return the index of the state
-
-
-def discretize(state, state_space):  # In general discretize a continous item into the discretized space
-    for i, dis in enumerate(state_space):  # space from small to big
-        if dis > state:
-            return i - 1
-    return i  # the last interval
-
-
-def obv2index(obv):
-    theta = trigo2angle(obv[0], obv[1])
-    theta = discretize(theta, theta_space)
-    dtheta = discretize(obv[2], dtheta_space)
-    return tuple([theta, dtheta])  # return the index of the state
-
-
-def pendulumModel(curState, action):
-    th, thdot = curState[0], curState[1]  # th := theta
-
-    g = 10.0
-    m = 1.
-    l = 1.
-    dt = .05
-
-    action = np.clip(action, -2, 2)
-
-    newthdot = thdot + (-3 * g / (2 * l) * np.sin(th + np.pi) + 3. / (m * l ** 2) * action) * dt
-    newth = th + newthdot * dt
-    newthdot = np.clip(newthdot, -8, 8)  # pylint: disable=E1111
-
-    cos = np.cos(newth)
-    sin = np.sin(newth)
-
-    newth = trigo2angle(cos, sin)
-    return np.array([newth, newthdot])
-
+# in helper
 def test(mode):
     env2 = gym.make('Pendulum-v0')
     state = env2.reset(mode=mode)
@@ -301,24 +267,21 @@ def test(mode):
     print('go into test')
     for step in range(TEST_STEP):
         print("testStep = ", step)
-        actionID = dqn_solver.act_test(state)
+        actionID = dqn_solver.act(state)
         action = action_space[actionID]
         action = np.array([action])
-        state_next, reward, terminal, info = env2.step(action)
-        theta = trigo2angle(state_next[0], state_next[1])
-        # if theta > np.pi / 3 or theta < -np.pi / 3:
-        #     break
-        state_next = np.reshape(state_next, [1, observation_dim])
+        obv, reward, terminal, info = env2.step(action)
+        state_next = np.reshape(obv, [1, observation_dim])
         state = state_next
         env2.render()
     env2.close()
     return None
 
-
+# in helper
 def test2(Q, mode):
     env3 = gym.make('Pendulum-v0')
     obv = env3.reset(mode=mode)
-    state = obv2index(obv)
+    state = helper.obv2index(obv, theta_space, dtheta_space)
     print('go into test')
     print("stateIndex = ", state)
     for step in range(TEST_STEP):
@@ -328,10 +291,7 @@ def test2(Q, mode):
         action = action_space[actionID]
         action = np.array([action])
         obv, reward, terminal, info = env3.step(action)
-        # theta = trigo2angle(state_next[0], state_next[1])
-        # if theta > np.pi / 3 or theta < -np.pi / 3:
-        #     break
-        state_next = obv2index(obv)
+        state_next = helper.obv2index(obv, theta_space, dtheta_space)
         state = state_next
         env3.render()
     env3.close()

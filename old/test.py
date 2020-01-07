@@ -34,6 +34,29 @@ def trigo2angle(cos, sin):  # from sin and cos to [-pi, pi]
         theta = -np.arccos(cos)
     return theta
 
+class testPointer:
+    def __init__(self):
+        self.state = 1
+        self.oldState = 2
+
+    def equalState(self):
+        self.oldState = self.state
+        self.state = 3
+
+'''testing'''
+def testing(agent, mode, step):
+    obv = agent.env.reset(mode = mode)
+    agent.obvToState(obv)
+    for step in range(step):
+        agent.act()  # do an action based on current state
+        impact = agent.actionToImpact()
+        obv, _, _, _ = agent.env.step(impact)
+        agent.obvToState(obv)
+        if step%(200) == 0:
+            agent.interactivePlot()
+        agent.env.render()
+    agent.env.close()
+
 def main():
     # test()
     # plt.ion()  # 开启interactive mode 成功的关键函数
@@ -50,10 +73,9 @@ def main():
     #     plt.show()
     #     plt.pause(0.01)
 
-    testVar = testVar + 1
+    testVar =  1
 
 
 if __name__ == '__main__':
-    global testVar
-    testVar = 1
-    main()
+    mytest = testPointer()
+    mytest.equalState()

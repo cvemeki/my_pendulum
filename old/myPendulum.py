@@ -96,7 +96,7 @@ def simulate():
     while True:
         print('episode:%s', episode)
         episode += 1
-        obv = env.reset(mode="easy")  # begin from the top
+        obv = env.reset(mode = ([0,0], [0,0]))  # begin from the top
         statePre = obv2index(obv)
         step = 0
         while True:
@@ -128,7 +128,7 @@ def simulate():
             colormap = plt.cm.hot
             # changingData = np.random.rand(10, 12)
             ax = sns.heatmap(max_Q, cmap=colormap)
-            rect = patches.Rectangle((statePre[0], statePre[1]), 1, 1, linewidth=1, edgecolor='lime', facecolor='lime')
+            rect = patches.Rectangle((statePre[1], statePre[0]), 1, 1, linewidth=1, edgecolor='lime', facecolor='lime')
             ax.add_patch(rect)
             plt.show()
             plt.pause(0.01)
@@ -169,7 +169,7 @@ def simulate():
 
 def test():
     env2 = gym.make('Pendulum-v0')
-    obv = env2.reset(mode="easy")
+    obv = env2.reset(mode = ([0,0], [0,0]))
     statePre = obv2index(obv)
     print('go into test')
     for step in range(TEST_STEP):
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     portion_action = 0.1
 
     num_theta = 33
-    num_dtheta = 33
+    num_dtheta = 16
     theta_min = -np.pi
     theta_max = np.pi
 

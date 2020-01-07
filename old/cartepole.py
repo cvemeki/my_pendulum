@@ -77,7 +77,7 @@ def cartpole():
             #env.render()
             action = dqn_solver.act(state)
             state_next, reward, terminal, info = env.step(action)
-            reward = reward if not terminal else -reward
+            # reward = reward if not terminal else -reward
             state_next = np.reshape(state_next, [1, observation_space])
             dqn_solver.remember(state, action, reward, state_next, terminal)
             state = state_next
@@ -88,6 +88,20 @@ def cartpole():
                 break
             dqn_solver.experience_replay()
             env.render()
+
+'''testing'''
+def testing(agent, mode, step):
+    obv = agent.env.reset(mode = mode)
+    agent.obvToState(obv)
+    for step in range(step):
+        agent.act()  # do an action based on current state
+        impact = agent.actionToImpact()
+        obv, _, _, _ = agent.env.step(impact)
+        agent.obvToState(obv)
+        if step%(200) == 0:
+            agent.interactivePlot()
+        agent.env.render()
+    agent.env.close()
 
 if __name__ == "__main__":
     cartpole()
