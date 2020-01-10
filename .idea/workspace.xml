@@ -5,7 +5,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/QLearning.py" beforeDir="false" afterPath="$PROJECT_DIR$/QLearning.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/deepQLearning.py" beforeDir="false" afterPath="$PROJECT_DIR$/deepQLearning.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dynamicProgramming.py" beforeDir="false" afterPath="$PROJECT_DIR$/dynamicProgramming.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />

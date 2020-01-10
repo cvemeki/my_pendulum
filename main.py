@@ -4,7 +4,7 @@ import dynamicProgramming
 # from deepQLearning import dqnAgentCart
 from deepQLearning import dqnAgent
 
-from QLearning import qAgentPend
+from QLearning import qAgent
 import QLearning
 
 # in the main we are going to run different methodes and do the comparisons.
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # agent.EPISODES_PER_LEARNING_MAX = 2000
     # agent.learning("random")
 
-    # test 4, --
+    # test 4, --  success! with random choose equal action
     # agent = dqnAgent("Pendulum-v0")
     # agent.BATCH_SIZE = 200
     # agent.STEPS_PER_EPISODE_MAX = 200
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # agent.EPISODES_PER_LEARNING_MAX = 100
     # agent.learning("random")
 
-    # test 5, --
+    # test 5, -- no result
     # agent = dqnAgent("Pendulum-v0")
     # agent.BATCH_SIZE = 200
     # agent.STEPS_PER_EPISODE_MAX = 200
@@ -71,14 +71,55 @@ if __name__ == '__main__':
     # agent.EPISODES_PER_LEARNING_MAX = 100
     # agent.learning("random")
 
-    # test 6 --
-    agent = dqnAgent("Pendulum-v0")
-    agent.BATCH_SIZE = 200
-    agent.STEPS_PER_EPISODE_MAX = 200
-    agent.GAMMA = 0.8
-    agent.EXPLORE_RATE_INIT = 0.5
-    agent.EXPLORE_RATE = 0.5
-    agent.EXPLORE_DECAY = 0.999
-    agent.LEARNING_RATE = 0.99
-    agent.EPISODES_PER_LEARNING_MAX = 100
+    # test 6 -- succeed! without random choose equal action
+    # agent = dqnAgent("Pendulum-v0")
+    # agent.BATCH_SIZE = 200
+    # agent.STEPS_PER_EPISODE_MAX = 200
+    # agent.GAMMA = 0.8
+    # agent.EXPLORE_RATE_INIT = 0.5
+    # agent.EXPLORE_RATE = 0.5
+    # agent.EXPLORE_DECAY = 0.999
+    # agent.LEARNING_RATE = 0.99
+    # agent.EPISODES_PER_LEARNING_MAX = 100
+    # agent.learning("random")
+
+    # test 7 -- interupted. 0.01 at top
+    # agent = dqnAgent("Pendulum-v0")
+    # agent.BATCH_SIZE = 200
+    # agent.STEPS_PER_EPISODE_MAX = 200
+    # agent.GAMMA = 0.8
+    # agent.EXPLORE_RATE_INIT = 0.5
+    # agent.EXPLORE_RATE = 0.5
+    # agent.EXPLORE_DECAY = 0.999
+    # agent.LEARNING_RATE = 0.99
+    # agent.EPISODES_PER_LEARNING_MAX = 100
+    # agent.learning("random")
+
+
+    # test 8 -- interupted. 0.01 at top, with immediat replay
+    # agent = dqnAgent("Pendulum-v0")
+    # agent.BATCH_SIZE = 200
+    # agent.STEPS_PER_EPISODE_MAX = 200
+    # agent.GAMMA = 0.8
+    # agent.EXPLORE_RATE_INIT = 0.5
+    # agent.EXPLORE_RATE = 0.5
+    # agent.EXPLORE_DECAY = 0.999
+    # agent.LEARNING_RATE = 0.99
+    # agent.EPISODES_PER_LEARNING_MAX = 100
+    # agent.learning("random")
+
+    # # test 9 -- not learning 0.1 at top, without immediat replay
+    # agent = qAgent("Pendulum-v0")
+    # agent.learning("random")
+
+    # test 10 -- 0.1 at top, without immediat replay
+    agent = qAgent("Pendulum-v0")
+    agent.EXPLORE_DECAY = 0.99999
     agent.learning("random")
+
+    # test 11 interupt -- binary action  decrease state space
+    # agent = qAgent("Pendulum-v0")
+    # agent.EXPLORE_DECAY = 0.99995
+    # agent.learning("random")
+
+    # learning rate = 0.8

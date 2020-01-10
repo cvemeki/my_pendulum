@@ -229,7 +229,7 @@ import matplotlib.patches as patches
 class dqnAgent:
 
     def __init__(self, envName):
-        self.memory = deque(maxlen=1000000) # default 1000000
+        self.memory = deque(maxlen=100000) # default 1000000
         '''changeable parameters'''
 
         self.scoreStep = 0
@@ -388,6 +388,16 @@ class dqnAgent:
         if self.envName == "Pendulum-v0":
             if np.linalg.norm([helper.trigo2angle(obv[0], obv[1])]) < 0.1:
                 self.reward = self.reward + self.terminalBonus
+
+            # q_update = self.reward
+            # if not self.terminateEpisode:
+            #     q_update = (self.reward + self.GAMMA * np.amax(self.model.predict(self.state)[0]))
+            # q_values = self.model.predict(self.state)
+            # q_values[0][self.action] = (1 - self.LEARNING_RATE) * q_values[0][
+            #     self.action] + self.LEARNING_RATE * q_update  # action is the index too
+            # self.model.fit(self.oldState, q_values, verbose=0)  # the memory before was kept too!
+
+
         '''update model'''
         self.remember(self.oldState, self.action, self.reward, self.state, self.terminateEpisode)
         self.experienceReplay()
@@ -603,7 +613,7 @@ class dqnAgent:
         self.render = 0
         if self.envName == "Pendulum-v0":
             self.TEST_STEP = 500
-            angleRange = np.linspace(-np.pi, np.pi, 12, True)
+            angleRange = np.linspace(-np.pi, np.pi, 13, True)
             # speedRange = np.array([-1,1])
             self.scoreTable = np.zeros(len(angleRange)-1)
             for i in range(len(angleRange)-1):

@@ -397,10 +397,10 @@ import matplotlib.patches as patches
 #         plt.show()
 #         plt.pause(0.01)
 
-class dqnAgent:
+class qAgent:
 
     def __init__(self, envName):
-        self.memory = deque(maxlen=1000000) # default 1000000
+        self.memory = deque(maxlen=100000) # default 1000000
         '''changeable parameters'''
 
         self.scoreStep = 0
@@ -416,12 +416,12 @@ class dqnAgent:
         self.envName = envName
 
         if self.envName == "Pendulum-v0":
-            self.actionSpace = np.linspace(-2, 2, 21, True)
-            # self.actionSpace = np.array([-2, 2, 0])  # what if binary action(bang-bang control)?
+            # self.actionSpace = np.linspace(-2, 2, 21, True)
+            self.actionSpace = np.array([-2, 2, 0])  # what if binary action(bang-bang control)?
         if self.envName == "CartPole-v0":
             self.actionSpace = np.array([0,1])  # what if binary action(bang-bang control)?
 
-        self.stateSpace = (np.linspace(-np.pi, np.pi, 65, False), np.linspace(-8, 8, 65, False)) # it's a tuple
+        self.stateSpace = (np.linspace(-np.pi, np.pi, 33, False), np.linspace(-8, 8, 33, False)) # it's a tuple
         self.stateSpace1 = self.stateSpace[0]
         self.stateSpace2 = self.stateSpace[1]
 
@@ -438,7 +438,7 @@ class dqnAgent:
             self.EPISODES_PER_LEARNING_MAX = 2000
             self.CONSECUTIVE_EPISODE = 5
             self.terminalBonus = 100
-            self.SCORE_SOLVED = 190/200   ## max = 1
+            self.SCORE_SOLVED = 0.85   ## max = 1
 
         if self.envName == "CartPole-v0":  # baseline model parameters
             self.BATCH_SIZE = 200
@@ -480,21 +480,11 @@ class dqnAgent:
         self.reward = 0
 
         '''model'''
-        self.model = Sequential()
         self.observationDim = self.env.observation_space.shape[0]  # = 3
         self.actionNumber = self.actionSpace.shape[0]
         self.Q = np.zeros((self.stateSpace1.size, self.stateSpace2.size, self.actionSpace.size))
         print("Milestone: initialized finished")
 
-        '''build'''
-        self.model.add(Dense(24, input_shape=(self.observationDim,), activation="relu"))
-        self.model.add(Dense(24, activation="relu"))
-        self.model.add(Dense(self.actionNumber, activation="linear"))
-        # self.model.compile(loss="mse", optimizer=keras.optimizers.SGD(lr=0.1, momentum=0.9, nesterov=True))
-        self.model.compile(loss="mse", optimizer=keras.optimizers.Adam(lr=0.001))
-
-        print("Milestone: build finished")
-        self.model.summary()
 
     '''Internal mechanisms'''
     def remember(self, state, action, reward, state_next, terminal):
@@ -505,35 +495,31 @@ class dqnAgent:
             return
         batch = random.sample(self.memory, self.BATCH_SIZE)
         for state, action, reward, state_next, terminal in batch:
-            q_update = reward
-            if not terminal:
-                q_update = (reward + self.GAMMA * np.amax(self.model.predict(state_next)[0]))
-            q_values = self.model.predict(state)
-            q_values[0][action] = (1 - self.LEARNING_RATE)*q_values[0][action] + self.LEARNING_RATE * q_update  # action is the index too
-            self.model.fit(state, q_values, verbose=0)  # the memory before was kept too!
+            best_q = np.amax(self.Q[state_next])
+            self.Q[self.oldState + (action,)] = (1 - self.LEARNING_RATE) * self.Q[state + (action,)] + self.LEARNING_RATE * \
+                                              (self.reward + self.GAMMA * best_q)
 
     '''make actions'''
     def act(self):
-        q_values = self.model.predict(self.state)
-        self.action = np.argmax(q_values[0])
+        self.action = np.argmax(self.Q[self.state])
 
     def explore(self):
         if np.random.rand() < self.EXPLORE_RATE:
             self.action = random.randrange(self.actionNumber)
             return
-        q_values = self.model.predict(self.state)
-        # self.action = np.argmax(q_values[0])  # best action index at current state
+
         if self.envName == "Pendulum-v0":
-            maxID = np.argwhere(q_values[0] == np.amax(q_values[0]))[:,0]
+            maxID = np.argwhere(self.Q[self.state] == np.amax(self.Q[self.state]))
             self.action = random.choice(maxID)
-            self.action = np.argmax(q_values[0])  ## TODO: to check
+            # self.action = np.argmax(self.Q[self.state])  ## TODO: to check
+
         if self.envName == "CartPole-v0":
             q_values = self.model.predict(self.state)
             self.action = np.argmax(q_values[0])  # best action index at current state
 
     '''Interact with environment'''
     def obvToState(self, obv):  # interface with the environment
-        self.state = np.reshape(obv, [1, self.observationDim])
+        self.state = helper.obv2index(obv, self.stateSpace1, self.stateSpace2)
 
     def actionToImpact(self):  # interface with the environment
         if self.envName == "Pendulum-v0":
@@ -550,22 +536,20 @@ class dqnAgent:
         self.oldState = self.state
 
         '''observe'''
-        obv, self.reward, self.terminateEpisode, info = self.env.step(impact)
-        self.obvToState(obv)  # state = state_next
+        self.obv, self.reward, self.terminateEpisode, info = self.env.step(impact)
+        self.obvToState(self.obv)  # state = state_next
         self.episodeTerminateCondition()
         if self.envName == "CartPole-v0":
             self.reward = self.reward if not self.terminateEpisode else -self.reward
 
         if self.envName == "Pendulum-v0":
-            if np.linalg.norm([helper.trigo2angle(obv[0], obv[1])]) < 0.1:
+            if np.linalg.norm([helper.trigo2angle(self.obv[0], self.obv[1])]) < 0.1:
                 self.reward = self.reward + self.terminalBonus
+
+
         '''update model'''
         self.remember(self.oldState, self.action, self.reward, self.state, self.terminateEpisode)
         self.experienceReplay()
-        # print("obv = ", obv)
-        # print("state = ", self.state)
-        # print("action = ", self.action)
-        # print("impact = ", impact)
 
 
     def oneLearningEpisode(self, mode):
@@ -630,7 +614,7 @@ class dqnAgent:
     '''update per'''
     def updatePerStep(self):
         print("learning: Episode = ", self.nLearningEpisode, "; Step = ", self.nLearningStep, "; explore rate = ", self.EXPLORE_RATE)
-        print(self.state)
+        print(np.reshape(self.obv, [1, 3]))
 
         if self.render:
             self.env.render()
@@ -638,16 +622,13 @@ class dqnAgent:
         if self.envName == "Pendulum-v0":
             self.EXPLORE_RATE *= self.EXPLORE_DECAY
             self.EXPLORE_RATE = max(self.EXPLORE_MIN, self.EXPLORE_RATE)
-            self.scoreStep = 1*(np.pi - np.abs(helper.trigo2angle(self.state[0][0],self.state[0][1])))/np.pi
+            self.scoreStep = 1*(np.pi - np.abs(helper.trigo2angle(self.obv[0],self.obv[1])))/np.pi
             self.scoreEpisode = self.scoreEpisode + self.scoreStep
         if self.envName == "CartPole-v0":
             self.scoreStep = self.reward
             self.scoreEpisode = self.scoreEpisode + self.scoreStep
 
         self.scoreSteps.append(self.scoreStep)
-        # if self.envName == "Pendulum-v0":
-        #     self.interactivePlotScore()
-
         self.nLearningStep += 1
         return None
 
@@ -710,17 +691,6 @@ class dqnAgent:
             step += 1
         self.env.close()
 
-    '''extract the Q matrix from the model'''
-    def extractQ(self):
-        for i, theta in enumerate(self.stateSpace1):
-            for j, dtheta in enumerate(self.stateSpace2):
-                state = np.array([np.cos(theta), np.sin(theta), dtheta])
-                state = np.reshape(state, [1, self.observationDim])
-                q_values = self.model.predict(state)
-                self.Q[i, j, :] = q_values[0, :]
-
-    # def extractR(self):
-
     '''plotting'''
     def plotQSurface(self, xDim, yDim, anchor):
         if {xDim, yDim} == {0,1}:
@@ -774,7 +744,7 @@ class dqnAgent:
         self.render = 0
         if self.envName == "Pendulum-v0":
             self.TEST_STEP = 500
-            angleRange = np.linspace(-np.pi, np.pi, 12, True)
+            angleRange = np.linspace(-np.pi, np.pi, 13, True)
             # speedRange = np.array([-1,1])
             self.scoreTable = np.zeros(len(angleRange)-1)
             for i in range(len(angleRange)-1):
@@ -801,13 +771,11 @@ class dqnAgent:
 
 
 def main():
-    agent.learning("random")
     # myDqnAgent.testing()
     # myDqnAgent.extractQ()
     # myDqnAgent.plotQSurface(0, 1, 16)
-
+    return None
 
 
 if __name__ == '__main__':
-    agent = qAgentPend()
     main()
