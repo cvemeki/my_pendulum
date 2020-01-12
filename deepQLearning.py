@@ -33,6 +33,8 @@ class dqnAgent:
 
         self.testScore = 0
 
+        self.replay = 1
+        
         '''environment'''
         self.env = gym.make(envName)
         self.envName = envName
@@ -191,23 +193,18 @@ class dqnAgent:
             self.reward = -((helper.trigo2angle(self.oldState[0][0], self.oldState[0][1]))**2 + self.rewardVelocity*self.oldState[0][2]**2 + .001*(impact[0]**2))
             if np.linalg.norm([helper.trigo2angle(obv[0], obv[1])]) < self.terminalBonusRange:
                 self.reward = self.reward + self.terminalBonus
-
-            # q_update = self.reward
-            # if not self.terminateEpisode:
-            #     q_update = (self.reward + self.GAMMA * np.amax(self.model.predict(self.state)[0]))
-            # q_values = self.model.predict(self.state)
-            # q_values[0][self.action] = (1 - self.LEARNING_RATE) * q_values[0][
-            #     self.action] + self.LEARNING_RATE * q_update  # action is the index too
-            # self.model.fit(self.oldState, q_values, verbose=0)  # the memory before was kept too!
-
-
+                
         '''update model'''
         self.remember(self.oldState, self.action, self.reward, self.state, self.terminateEpisode)
-        self.experienceReplay()
-        # print("obv = ", obv)
-        # print("state = ", self.state)
-        # print("action = ", self.action)
-        # print("impact = ", impact)
+        if self.replay:
+            self.experienceReplay()
+        else:
+            q_update = self.reward
+            if not self.terminateEpisode:
+                q_update = (self.reward + self.GAMMA * np.amax(self.model.predict(self.state)[0]))
+            q_values = self.model.predict(self.state)
+            q_values[0][self.action] = (1 - self.LEARNING_RATE) * q_values[0][self.action] + self.LEARNING_RATE * q_update  # action is the index too
+            self.model.fit(self.oldState, q_values, verbose=0)  # the memory before was kept too!
 
 
     def oneLearningEpisode(self, mode):
