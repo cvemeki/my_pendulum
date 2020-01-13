@@ -49,7 +49,13 @@ class dqnAgent:
 
         self.stateSpace = (np.linspace(-np.pi, np.pi, 65, False), np.linspace(-8, 8, 65, False)) # it's a tuple
 
-
+        '''exploring'''
+        self.EXPLORE_RATE_INIT = 1.0
+        self.EXPLORE_MAX = 1.0
+        self.EXPLORE_MIN = 0.01
+        self.EXPLORE_DECAY = 0.998
+        
+        
         '''learning'''
         if self.envName == "Pendulum-v0":  # baseline model parameters
             self.BATCH_SIZE = 200
@@ -61,22 +67,28 @@ class dqnAgent:
             self.terminalBonus = 100
             self.terminalBonusRange = 0.1
             self.SCORE_SOLVED = 0.85   ## max = 1
-
+            
+            '''exploring'''
+            self.EXPLORE_RATE_INIT = 1.0
+            self.EXPLORE_MAX = 1.0
+            self.EXPLORE_MIN = 0.01
+            self.EXPLORE_DECAY = 0.998
+            
         if self.envName == "CartPole-v0":  # baseline model parameters
             self.BATCH_SIZE = 200
             self.GAMMA = 0.99
             self.LEARNING_RATE = 0.99
             self.STEPS_PER_EPISODE_MAX = 200
-            self.EPISODES_PER_LEARNING_MAX = 20
+            self.EPISODES_PER_LEARNING_MAX = 200
             self.CONSECUTIVE_EPISODE = 5
 
             self.SCORE_SOLVED = 195/200  ## max = 1
 
-        '''exploring'''
-        self.EXPLORE_RATE_INIT = 1.0
-        self.EXPLORE_MAX = 1.0
-        self.EXPLORE_MIN = 0.01
-        self.EXPLORE_DECAY = 0.998
+            '''exploring'''
+            self.EXPLORE_RATE_INIT = 1.0
+            self.EXPLORE_MAX = 1.0
+            self.EXPLORE_MIN = 0.01
+            self.EXPLORE_DECAY = 0.98
 
         '''testing'''
         self.TEST_STEP = 1000
@@ -291,7 +303,7 @@ class dqnAgent:
         return None
 
     def updatePerEpisode(self):
-        print("one episode ends")
+        print("one episode ends, score = ", self.scoreEpisode)
         self.nLearningEpisode += 1
         # if self.nLearningStep >= self.STEPS_PER_EPISODE_WHEN_SUCCESS:
         #     self.nSuccessfulEpisode += 1
@@ -344,6 +356,7 @@ class dqnAgent:
                 self.testScore = self.testScore + 1*(np.pi - np.abs(helper.trigo2angle(obv[0],obv[1])))/np.pi
             if self.envName == "CartPole-v0":
                 if terminate == 1:
+                    print("test score =", self.testScore)
                     break
                 self.testScore = self.testScore + reward/200
             step += 1
@@ -435,7 +448,7 @@ class dqnAgent:
                 print(i)
                 self.testing("random")
                 self.scoreTable[i] = self.testScore
-            ax = sns.distplot(self.scoreTable, axlabel="test score")
+            ax = sns.distplot(self.scoreTable, axlabel="test score",norm_hist = False)
             ax.set_ylabel("number of tests")
 
 

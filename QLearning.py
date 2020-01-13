@@ -9,9 +9,8 @@ from collections import deque
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.patches as patches
+import gym_maze
 
-
-## for pendulum environment
 class qAgent:
 
     def __init__(self, envName):
@@ -33,17 +32,23 @@ class qAgent:
 
         self.rewardVelocity = 0
         
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":   ## TODO: to check
             self.actionSpace = np.linspace(-2, 2, 21, True)
             # self.actionSpace = np.array([-2, 2, 0])  # what if binary action(bang-bang control)?
+            self.stateSpace = (np.linspace(-np.pi, np.pi, 65, False), np.linspace(-8, 8, 65, False)) # it's a tuple
+            
+            
         if self.envName == "CartPole-v0":
             self.actionSpace = np.array([0,1])  # what if binary action(bang-bang control)?
-
-        self.stateSpace = (np.linspace(-np.pi, np.pi, 65, False), np.linspace(-8, 8, 65, False)) # it's a tuple
-
+            
+        if "maze" in self.envName:
+            self.actionSpace = np.arange(4)  # what if binary action(bang-bang control)?
+            self.state_bound = list(zip(self.env.observation_space.low, self.env.observation_space.high))
+            self.stateSpace = (np.arange(self.state_bound[0][1]+1), np.arange(self.state_bound[1][1]+1))
+            
 
         '''learning'''
-        if self.envName == "Pendulum-v0":  # baseline model parameters
+        if self.envName == "Pendulum-v0":  # baseline model parameters   ## TODO: to check
             self.BATCH_SIZE = 200
             self.GAMMA = 0.95
             self.LEARNING_RATE = 0.8
@@ -64,6 +69,17 @@ class qAgent:
 
             self.SCORE_SOLVED = 195/200  ## max = 1
 
+        if "maze" in self.envName:
+            self.BATCH_SIZE = 200
+            self.GAMMA = 0.99
+            self.LEARNING_RATE = 0.99
+            self.STEPS_PER_EPISODE_MAX = 200
+            self.EPISODES_PER_LEARNING_MAX = 200
+            self.CONSECUTIVE_EPISODE = 5
+
+            self.SCORE_SOLVED = 195/200  ## max = 1
+            
+            
         '''exploring'''
         self.EXPLORE_RATE_INIT = 1.0
         self.EXPLORE_MAX = 1.0
@@ -130,26 +146,43 @@ class qAgent:
     def explore(self):
         if np.random.rand() < self.EXPLORE_RATE:
             self.action = random.randrange(self.actionNumber)
+            print("maze action ", self.action)
             return
 
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":   ## TODO: to check
             maxID = np.argwhere(self.Q[self.state] == np.amax(self.Q[self.state]))
             self.action = random.choice(maxID)
-            # self.action = np.argmax(self.Q[self.state])  ## TODO: to check
+            # self.action = np.argmax(self.Q[self.state])  
 
         if self.envName == "CartPole-v0":
-            q_values = self.model.predict(self.state)
-            self.action = np.argmax(q_values[0])  # best action index at current state
+            maxID = np.argwhere(self.Q[self.state] == np.amax(self.Q[self.state]))
+            self.action = random.choice(maxID)
+            # self.action = np.argmax(self.Q[self.state])  
+            
+        if "maze" in self.envName:
+            maxID = np.argwhere(self.Q[self.state] == np.amax(self.Q[self.state]))
+            self.action = int(random.choice(maxID[:,0]))
+            # self.action = np.argmax(self.Q[self.state])  
             
     '''Interact with environment'''
     def obvToState(self, obv):  # interface with the environment
-        self.state = np.reshape(obv, [1, self.observationDim])
-
+        if self.envName == "Pendulum-v0":  ## TODO: to check
+            self.state = np.reshape(obv, [1, self.observationDim])
+        
+        if self.envName == "CartPole-v0":
+            return
+            
+        if "maze" in self.envName:
+            self.state = (int(obv[0]), int(obv[1])) 
+            
+            
     def actionToImpact(self):  # interface with the environment
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0": ## TODO: to check
             return tuple([self.actionSpace[self.action],])
         if self.envName == "CartPole-v0":
             return self.actionSpace[self.action]
+        if "maze" in self.envName:
+            return self.action 
 
     '''learning'''
     def oneLearningStep(self):
@@ -159,11 +192,12 @@ class qAgent:
         impact = self.actionToImpact()
         self.oldState = self.state
 
-        '''observe'''
+        '''observe''' 
         obv, self.reward, self.terminateEpisode, info = self.env.step(impact)
         self.obvToState(obv)  # state = state_next
         self.episodeTerminateCondition()
-        if self.envName == "CartPole-v0":
+        
+        if self.envName == "CartPole-v0":  ## TODO: to check
             self.reward = self.reward if not self.terminateEpisode else -self.reward
 
         if self.envName == "Pendulum-v0":
@@ -179,7 +213,7 @@ class qAgent:
     def oneLearningEpisode(self, mode):
 
         '''initialize'''
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":  ## TODO: to check
             obv = self.env.reset(mode=mode)
         else:
             obv = self.env.reset()
@@ -212,7 +246,13 @@ class qAgent:
 
     '''terminate conditions'''
     def episodeTerminateCondition(self):
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":  ## TODO: check
+            if self.nLearningStep >= self.STEPS_PER_EPISODE_MAX:
+                self.terminateEpisode = 1
+            else:
+                self.terminateEpisode = 0
+                
+        if "maze" in self.envName:
             if self.nLearningStep >= self.STEPS_PER_EPISODE_MAX:
                 self.terminateEpisode = 1
             else:
@@ -220,7 +260,7 @@ class qAgent:
         return None
 
     def learningTerminateCondition(self):
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":  ## TODO: to check
             if self.nLearningEpisode >= self.EPISODES_PER_LEARNING_MAX:
                 self.terminateLearning = 1
             elif len(self.scoreEpisodes) >= self.CONSECUTIVE_EPISODE:
@@ -233,6 +273,11 @@ class qAgent:
             elif len(self.scoreEpisodes) >= self.CONSECUTIVE_EPISODE:
                 if np.mean(self.scoreEpisodes[-self.CONSECUTIVE_EPISODE:]) >= self.SCORE_SOLVED:
                     self.terminateLearning = 1
+                    
+        if "maze" in self.envName:
+            if self.nLearningEpisode >= self.EPISODES_PER_LEARNING_MAX:
+                self.terminateLearning = 1
+                
         return None
 
     '''update per'''
@@ -243,7 +288,7 @@ class qAgent:
         if self.render:
             self.env.render()
 
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":   ## TODO: to check
             self.EXPLORE_RATE *= self.EXPLORE_DECAY
             self.EXPLORE_RATE = max(self.EXPLORE_MIN, self.EXPLORE_RATE)
             self.scoreStep = 1*(np.pi - np.abs(helper.trigo2angle(self.state[0][0],self.state[0][1])))/np.pi
@@ -251,7 +296,10 @@ class qAgent:
         if self.envName == "CartPole-v0":
             self.scoreStep = self.reward
             self.scoreEpisode = self.scoreEpisode + self.scoreStep
-
+        if "maze" in self.envName:
+            self.EXPLORE_RATE *= self.EXPLORE_DECAY
+            self.EXPLORE_RATE = max(self.EXPLORE_MIN, self.EXPLORE_RATE)
+            
         self.scoreSteps.append(self.scoreStep)
         # if self.envName == "Pendulum-v0":
         #     self.interactivePlotScore()
@@ -264,14 +312,18 @@ class qAgent:
         self.nLearningEpisode += 1
         # if self.nLearningStep >= self.STEPS_PER_EPISODE_WHEN_SUCCESS:
         #     self.nSuccessfulEpisode += 1
-        if self.envName == "CartPole-v0":
+        if self.envName == "Pendulum-v0":
+            self.scoreEpisodes.append(self.scoreEpisode / self.nLearningStep)
+            self.interactivePlotScore()
+            
+        if self.envName == "CartPole-v0":  ## TODO: to check
             self.EXPLORE_RATE *= self.EXPLORE_DECAY
             self.EXPLORE_RATE = max(self.EXPLORE_MIN, self.EXPLORE_RATE)
             self.scoreEpisodes.append(self.scoreEpisode / 200)
             self.interactivePlotScore()
-        if self.envName == "Pendulum-v0":
-            self.scoreEpisodes.append(self.scoreEpisode / self.nLearningStep)
-            self.interactivePlotScore()
+            
+        if "maze" in self.envName:
+            print("")
         return None
 
     '''initialize per'''
@@ -291,7 +343,7 @@ class qAgent:
 
     '''testing'''
     def testing(self, mode):
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":   ## TODO: to check
             obv = self.env.reset(mode = mode)
         else: obv = self.env.reset()
         self.testScore = 0
@@ -356,7 +408,7 @@ class qAgent:
 
     def interactivePlotScore(self):
         plt.clf()
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":   ## TODO: to check
             plt.plot(self.scoreEpisodes)
             plt.xlabel("episodes")
             plt.ylabel("episode score")
@@ -370,7 +422,7 @@ class qAgent:
 
     def offlineScore(self):
         self.render = 0
-        if self.envName == "Pendulum-v0":
+        if self.envName == "Pendulum-v0":   ## TODO: to check
             self.TEST_STEP = 500
             angleRange = np.linspace(-np.pi, np.pi, 13, True)
             # speedRange = np.array([-1,1])

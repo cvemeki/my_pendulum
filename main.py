@@ -241,15 +241,53 @@ if __name__ == '__main__':
     
     '''********** different înitial states **************'''
     
-    agent11 = dqnAgent("Pendulum-v0")
+    agent11 = dqnAgent("Pendulum-v0")  # fail in 50 eps
     agent11.build()
     agent11.learning(([np.pi,-1],[np.pi,1]))
     agent11.offlineScore()
     
-    agent12 = dqnAgent("Pendulum-v0")
+    agent12 = dqnAgent("Pendulum-v0")   # fail in 50 eps
     agent12.build()
     agent12.learning(([0,-1],[0,1]))
     agent12.offlineScore()
+    
+    '''extractQ'''
+    agent11.extractQ()
+    agent12.extractQ()
+    
+    '''offline evaluation'''
+    angleRange = np.linspace(-np.pi, np.pi, 13, True)
+    flatline = np.ones(12)*0.85
+    plt.hlines(flatline, angleRange[:-1], angleRange[1:], label = "score of successful episode", color = "red", linestyle = ':')
+    plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent initialized randomly", color = "green")
+    plt.hlines(agent11.scoreTable, angleRange[:-1], angleRange[1:], label = "agent initialized always from the bottom", color = "blue")
+    plt.hlines(agent12.scoreTable, angleRange[:-1], angleRange[1:], label = "agent initialized always from the top", color = "orange")
+    plt.xlabel("initial angle range(rad)")
+    plt.ylabel("average score")
+    plt.legend(bbox_to_anchor=(0.5, 0., 0.5, 0.4))
+    plt.show()
+    
+    '''online evaluation'''
+    plt.plot(agent0.scoreEpisodes, label = "basic agent initialized randomly", color = "green")
+    plt.plot(agent11.scoreEpisodes, label = "agent initialized always from the bottom", color = "blue")
+    plt.plot(agent12.scoreEpisodes, label = "agent initialized always from the top", color = "orange")
+
+    plt.legend()
+    plt.xlabel("episodes")
+    plt.ylabel("episode score")
+
+    '''heatMap'''
+    max_Q = np.amax(agent12.Q, axis=2)
+    colormap = plt.cm.hot
+    ax = sns.heatmap(max_Q, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
+    
+    agent12.plotQSurface(0,1,11)
+    agent12.plotQSurface(0,2,33)
+    agent12.plotQSurface(1,2,33)
+    
     
     '''********** different learning rate **************'''
     agent13 = dqnAgent("Pendulum-v0")
@@ -263,6 +301,43 @@ if __name__ == '__main__':
     agent14.build()
     agent14.learning("random")
     agent14.offlineScore()
+    
+        '''extractQ'''
+    agent13.extractQ()
+    agent14.extractQ()
+    
+    '''offline evaluation'''
+    angleRange = np.linspace(-np.pi, np.pi, 13, True)
+    flatline = np.ones(12)*0.85
+    plt.hlines(flatline, angleRange[:-1], angleRange[1:], label = "score of successful episode", color = "red", linestyle = ':')
+    plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent with learning rate = 0.8", color = "green")
+    plt.hlines(agent13.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with learning rate = 1", color = "blue")
+    plt.hlines(agent14.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with learning rate = 0.5", color = "orange")
+    plt.xlabel("initial angle range(rad)")
+    plt.ylabel("average score")
+    plt.legend(bbox_to_anchor=(0.5, 0., 0.5, 0.4))
+    plt.show()
+    
+    '''online evaluation'''
+    plt.plot(agent0.scoreEpisodes, label = "basic agent with learning rate = 0.8", color = "green")
+    plt.plot(agent13.scoreEpisodes, label = "agent with learning rate = 1", color = "blue")
+    plt.plot(agent14.scoreEpisodes, label = "agent with learning rate = 0.5", color = "orange")
+
+    plt.legend()
+    plt.xlabel("episodes")
+    plt.ylabel("episode score")
+
+    '''heatMap'''
+    max_Q = np.amax(agent13.Q, axis=2)
+    colormap = plt.cm.hot
+    ax = sns.heatmap(max_Q, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
+    
+    agent13.plotQSurface(0,1,11)
+    agent13.plotQSurface(0,2,33)
+    agent13.plotQSurface(1,2,33)
     
     '''********** different discount factor **************'''
     
@@ -292,3 +367,4 @@ if __name__ == '__main__':
     agent18.learning("random")
     agent18.offlineScore()
 
+    '''********** different explore decay **************'''
