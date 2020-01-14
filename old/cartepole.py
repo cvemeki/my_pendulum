@@ -9,7 +9,7 @@ from keras.optimizers import Adam
 
 # from scores.score_logger import ScoreLogger
 
-ENV_NAME = "CartPole-v1"
+ENV_NAME = "CartPole-v0"
 
 GAMMA = 0.95
 LEARNING_RATE = 0.001
@@ -82,7 +82,7 @@ def cartpole():
             dqn_solver.remember(state, action, reward, state_next, terminal)
             state = state_next
             if terminal:
-                print ("Run: ", run, " Step: ", step)
+                print ("Run: ", run, " Step: ", step, "explore rate: ", dqn_solver.exploration_rate)
                 # print ("Run: " + str(run) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(step))
                 # score_logger.add_score(step, run)
                 break

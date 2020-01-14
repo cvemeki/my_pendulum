@@ -75,11 +75,11 @@ class dqnAgent:
             self.EXPLORE_DECAY = 0.998
             
         if self.envName == "CartPole-v0":  # baseline model parameters
-            self.BATCH_SIZE = 200
-            self.GAMMA = 0.99
-            self.LEARNING_RATE = 0.99
+            self.BATCH_SIZE = 20
+            self.GAMMA = 0.95
+            self.LEARNING_RATE = 1
             self.STEPS_PER_EPISODE_MAX = 200
-            self.EPISODES_PER_LEARNING_MAX = 200
+            self.EPISODES_PER_LEARNING_MAX = 500
             self.CONSECUTIVE_EPISODE = 5
 
             self.SCORE_SOLVED = 195/200  ## max = 1
@@ -88,7 +88,8 @@ class dqnAgent:
             self.EXPLORE_RATE_INIT = 1.0
             self.EXPLORE_MAX = 1.0
             self.EXPLORE_MIN = 0.01
-            self.EXPLORE_DECAY = 0.98
+            self.EXPLORE_DECAY = 0.88
+            self.MEMORY_SIZE = 1000000
 
         '''testing'''
         self.TEST_STEP = 1000
@@ -214,7 +215,7 @@ class dqnAgent:
             q_update = self.reward
             if not self.terminateEpisode:
                 q_update = (self.reward + self.GAMMA * np.amax(self.model.predict(self.state)[0]))
-            q_values = self.model.predict(self.state)
+            q_values = self.model.predict(self.oldState)
             q_values[0][self.action] = (1 - self.LEARNING_RATE) * q_values[0][self.action] + self.LEARNING_RATE * q_update  # action is the index too
             self.model.fit(self.oldState, q_values, verbose=0)  # the memory before was kept too!
 

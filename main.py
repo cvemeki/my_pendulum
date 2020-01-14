@@ -20,12 +20,11 @@ if __name__ == '__main__':
     
     ''' dummy agent '''
     dummy = dqnAgent("Pendulum-v0")
-    dummy.EXPLORE_RATE_INIT = 1
-    dummy.EXPLORE_DECAY = 1  ## always exploring
     dummy.BATCH_SIZE = 1
-    dummy.EPISODES_PER_LEARNING_MAX = 20
+    dummy.EPISODES_PER_LEARNING_MAX = 2
     dummy.build()
     dummy.learning("random")
+    dummy.offlineScore()
     
     '''baseline model'''
     agent0 = dqnAgent("Pendulum-v0")
@@ -134,7 +133,7 @@ if __name__ == '__main__':
     plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent with weight = 0", color = "green")
     plt.hlines(agent4.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 0.01", color = "orange")
 #    plt.hlines(agent3.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 0.1", color = "blue")
-    plt.hlines(agent5.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 1", color = "cyan")
+    plt.hlines(agent5.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 1", color = "blue")
 #    plt.hlines(agent6.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 10", color = "grey")
     plt.xlabel("initial angle range(rad)")
     plt.ylabel("average score")
@@ -146,7 +145,7 @@ if __name__ == '__main__':
     plt.plot(agent0.scoreEpisodes, label = "basic agent with weight = 0", color = "green")
     plt.plot(agent4.scoreEpisodes, label = "with velocity weight = 0.01", color = "orange")
 #    plt.plot(agent3.scoreEpisodes[:30], label = "with velocity weight = 0.1", color = "blue")
-    plt.plot(agent5.scoreEpisodes, label = "with velocity weight = 1", color = "cyan")
+    plt.plot(agent5.scoreEpisodes, label = "with velocity weight = 1", color = "blue")
 #    plt.plot(agent6.scoreEpisodes[:30], label = "with velocity weight = 10", color = "grey")
 
     plt.legend()
@@ -167,6 +166,8 @@ if __name__ == '__main__':
     agent6.plotQSurface(0,1,11)
     agent6.plotQSurface(0,2,33)
     agent6.plotQSurface(1,2,33)
+    
+    print()
     
     '''********** different action division **************'''
     
@@ -207,9 +208,6 @@ if __name__ == '__main__':
     plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent with 21 actions", color = "green")
     plt.hlines(agent7.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with 3 actions", color = "blue")
     plt.hlines(agent8.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with 11 actions", color = "orange")
-#    plt.hlines(agent9.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 0.1", color = "grey")
-#    plt.hlines(agent4.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 0.01", color = "magenta")
-#    plt.hlines(agent5.scoreTable, angleRange[:-1], angleRange[1:], label = "with velocity weight = 1", color = "black")
     plt.xlabel("initial angle range(rad)")
     plt.ylabel("average score")
     plt.legend(bbox_to_anchor=(0.5, 0., 0.5, 0.4))
@@ -219,9 +217,6 @@ if __name__ == '__main__':
     plt.plot(agent0.scoreEpisodes, label = "basic agent with 21 actions", color = "green")
     plt.plot(agent7.scoreEpisodes, label = "agent with 3 actions", color = "blue")
     plt.plot(agent8.scoreEpisodes, label = "agent with 11 actions", color = "orange")
-#    plt.plot(agent9.scoreEpisodes, label = "with velocity weight = 0.1", color = "grey")
-#    plt.plot(agent4.scoreEpisodes, label = "with velocity weight = 0.01", color = "magenta")
-#    plt.plot(agent5.scoreEpisodes, label = "with velocity weight = 1", color = "black")
 
     plt.legend()
     plt.xlabel("episodes")
@@ -302,7 +297,7 @@ if __name__ == '__main__':
     agent14.learning("random")
     agent14.offlineScore()
     
-        '''extractQ'''
+    '''extractQ'''
     agent13.extractQ()
     agent14.extractQ()
     
@@ -334,10 +329,20 @@ if __name__ == '__main__':
     plt.xlabel("dtheta(index)")
     plt.ylabel("theta(index)")
     plt.show()
+
+
+    bestAction = np.argmax(agent14.Q, axis=2)
+    bestAction = agent14.actionSpace[bestAction]
+    colormap = plt.cm.hot
+    ax = sns.heatmap(bestAction, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
     
     agent13.plotQSurface(0,1,11)
     agent13.plotQSurface(0,2,33)
     agent13.plotQSurface(1,2,33)
+
     
     '''********** different discount factor **************'''
     
@@ -353,18 +358,117 @@ if __name__ == '__main__':
     agent16.learning("random")
     agent16.offlineScore()
     
-    '''********** different replay **************'''
+    '''extractQ'''
+    agent15.extractQ()
+    agent16.extractQ()
     
-    agent17 = dqnAgent("Pendulum-v0")
-    agent17.replay = 0
-    agent17.build()
-    agent17.learning("random")
-    agent17.offlineScore()
+    '''offline evaluation'''
+    angleRange = np.linspace(-np.pi, np.pi, 13, True)
+    flatline = np.ones(12)*0.85
+    plt.hlines(flatline, angleRange[:-1], angleRange[1:], label = "score of successful episode", color = "red", linestyle = ':')
+    plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent with discount factor = 0.95", color = "green")
+    plt.hlines(agent15.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with discount factor = 0.8", color = "blue")
+    plt.hlines(agent16.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with discount factor = 0.5", color = "orange")
+    plt.xlabel("initial angle range(rad)")
+    plt.ylabel("average score")
+    plt.legend(bbox_to_anchor=(0.5, 0., 0.5, 0.4))
+    plt.show()
+    
+    '''online evaluation'''
+    plt.plot(agent0.scoreEpisodes, label = "basic agent with discount factor = 0.95", color = "green")
+    plt.plot(agent15.scoreEpisodes, label = "agent with discount factor = 0.8", color = "blue")
+    plt.plot(agent16.scoreEpisodes, label = "agent with discount factor = 0.5", color = "orange")
+
+    plt.legend()
+    plt.xlabel("episodes")
+    plt.ylabel("episode score")
+
+    '''heatMap'''
+    max_Q = np.amax(agent16.Q, axis=2)
+    colormap = plt.cm.hot
+    ax = sns.heatmap(max_Q, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
+
+
+    bestAction = np.argmax(agent15.Q, axis=2)
+    bestAction = agent15.actionSpace[bestAction]
+    colormap = plt.cm.hot
+    ax = sns.heatmap(bestAction, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
+    
+    agent16.plotQSurface(0,1,11)
+    agent16.plotQSurface(0,2,33)
+    agent16.plotQSurface(1,2,33)
+    
+    '''********** different replay **************'''    
+    agent171 = dqnAgent("Pendulum-v0")
+    agent171.replay = 0
+    agent171.EPISODES_PER_LEARNING_MAX = 2000
+    agent171.EXPLORE_DECAY = 0.99999
+    agent171.build()
+    agent171.learning("random")
+    agent171.offlineScore()
+    
+    agent172 = dqnAgent("Pendulum-v0")
+    agent172.replay = 1
+    agent172.BATCH_SIZE = 1
+    agent172.EPISODES_PER_LEARNING_MAX = 2000
+    agent172.EXPLORE_DECAY = 0.99999
+    agent172.build()
+    agent172.learning("random")
+    agent172.offlineScore()
     
     agent18 = dqnAgent("Pendulum-v0")
     agent18.BATCH_SIZE = 20
+    agent18.EPISODES_PER_LEARNING_MAX = 500
     agent18.build()
     agent18.learning("random")
     agent18.offlineScore()
+    
+    '''extractQ'''
+    agent171.extractQ()
+    agent172.extractQ()
+    dummy.extractQ()
+    agent18.extractQ()
+    
+    '''offline evaluation'''
+    angleRange = np.linspace(-np.pi, np.pi, 13, True)
+    flatline = np.ones(12)*0.85
+    plt.hlines(flatline, angleRange[:-1], angleRange[1:], label = "score of successful episode", color = "red", linestyle = ':')
+#    plt.hlines(dummy.scoreTable, angleRange[:-1], angleRange[1:], label = "dummy agent", color = "grey")
+    plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent with replay, batch size = 200, exlore decay = 0.998", color = "green")
+    plt.hlines(agent171.scoreTable, angleRange[:-1], angleRange[1:], label = "agent without replay, explore decay = 0.99999", color = "blue")
+    plt.hlines(agent172.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with replay, batch size = 1, explore decay = 0.99999", color = "orange")
+    plt.hlines(agent18.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with replay, batch size = 20, exlore decay = 0.998", color = "brown")
+    plt.xlabel("initial angle range(rad)")
+    plt.ylabel("average score")
+    plt.legend(bbox_to_anchor=(0.5, 0., 0.5, 0.4))
+    plt.show()
+    
+    '''online evaluation'''
+    plt.plot(agent0.scoreEpisodes, label = "basic agent with replay, batch size = 200, explore decay = 0.998", color = "green")
+    plt.plot(agent171.scoreEpisodes[:1150], label = "agent without replay, explore decay = 0.99999", color = "blue")
+    plt.plot(agent172.scoreEpisodes, label = "agent with replay, batch size = 1, explore decay = 0.99999", color = "orange")
+    plt.plot(agent18.scoreEpisodes, label = "agent with replay, batch size = 20, exlore decay = 0.998", color = "brown")
+    plt.legend()
+    plt.xlabel("episodes")
+    plt.ylabel("episode score")
 
-    '''********** different explore decay **************'''
+    '''heatMap'''
+    max_Q = np.amax(agent18.Q, axis=2)
+    colormap = plt.cm.hot
+    ax = sns.heatmap(max_Q, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
+    
+    agent171.plotQSurface(0,1,11)
+    agent171.plotQSurface(0,2,33)
+    agent171.plotQSurface(1,2,33)
+
+    
+

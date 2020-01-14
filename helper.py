@@ -65,6 +65,15 @@ def pendulumModel(curState, action):
     return np.array([newth, newthdot])
 
 
+def plotAction(agent):
+    bestAction = np.argmax(agent.Q, axis=2)
+    colormap = plt.cm.hot
+    ax = sns.heatmap(bestAction, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
+    return None
+
 def test(mode, env, agent, TEST_STEP):
     obv = env.reset(mode = mode)
     for step in range(TEST_STEP):
