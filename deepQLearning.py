@@ -23,7 +23,7 @@ class dqnAgent:
     def __init__(self, envName):
     
         '''changeable parameters'''
-        
+        self.testVariable = 66666
         self.MEMORY_SIZE = 100000
         self.scoreStep = 0
         self.scoreEpisode = 0

@@ -1,11 +1,9 @@
-from old import test
 import numpy as np
-import dynamicProgramming
+
 # from deepQLearning import dqnAgentCart
 from deepQLearning import dqnAgent
 
 from QLearning import qAgent
-import QLearning
 
 import matplotlib.pyplot as plt
 
@@ -208,6 +206,7 @@ if __name__ == '__main__':
     plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent with 21 actions", color = "green")
     plt.hlines(agent7.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with 3 actions", color = "blue")
     plt.hlines(agent8.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with 11 actions", color = "orange")
+    plt.hlines(agent9.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with 41 actions", color = "brown")
     plt.xlabel("initial angle range(rad)")
     plt.ylabel("average score")
     plt.legend(bbox_to_anchor=(0.5, 0., 0.5, 0.4))
@@ -217,6 +216,7 @@ if __name__ == '__main__':
     plt.plot(agent0.scoreEpisodes, label = "basic agent with 21 actions", color = "green")
     plt.plot(agent7.scoreEpisodes, label = "agent with 3 actions", color = "blue")
     plt.plot(agent8.scoreEpisodes, label = "agent with 11 actions", color = "orange")
+    plt.plot(agent9.scoreEpisodes, label = "agent with 41 actions", color = "brown")
 
     plt.legend()
     plt.xlabel("episodes")
@@ -470,5 +470,60 @@ if __name__ == '__main__':
     agent171.plotQSurface(0,2,33)
     agent171.plotQSurface(1,2,33)
 
+    '''*********************************Q learning part**************************************************'''
+    agent19 = qAgent("Pendulum-v0")
+    agent19.EXPLORE_DECAY = 0.99999
+    agent19.EPISODES_PER_LEARNING_MAX = 2000
+    agent19.build()
+    agent19.learning("random")
+    agent19.offlineScore()
     
+        
+    '''offline evaluation'''
+    angleRange = np.linspace(-np.pi, np.pi, 13, True)
+    flatline = np.ones(12)*0.85
+    plt.hlines(flatline, angleRange[:-1], angleRange[1:], label = "score of successful episode", color = "red", linestyle = ':')
+    plt.hlines(dummy.scoreTable, angleRange[:-1], angleRange[1:], label = "dummy agent", color = "grey")
+#    plt.hlines(agent0.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent with replay, batch size = 200, exlore decay = 0.998", color = "green")
+    plt.hlines(agent19.scoreTable, angleRange[:-1], angleRange[1:], label = "basic agent q learning", color = "blue")
+#    plt.hlines(agent172.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with replay, batch size = 1, explore decay = 0.99999", color = "orange")
+#    plt.hlines(agent18.scoreTable, angleRange[:-1], angleRange[1:], label = "agent with replay, batch size = 20, exlore decay = 0.998", color = "brown")
+    plt.xlabel("initial angle range(rad)")
+    plt.ylabel("average score")
+    plt.legend(bbox_to_anchor=(0.5, 0., 0.5, 0.4))
+    plt.show()
+    
+    '''online evaluation'''
+    ax = plt.axes()
+#    plt.plot(agent0.scoreEpisodes, label = "basic agent with replay, batch size = 200, explore decay = 0.998", color = "green")
+    plt.plot(agent19.scoreEpisodes[:1150], label = "basic agent q learning", color = "blue")
+#    plt.plot(agent172.scoreEpisodes, label = "agent with replay, batch size = 1, explore decay = 0.99999", color = "orange")
+#    plt.plot(agent18.scoreEpisodes, label = "agent with replay, batch size = 20, exlore decay = 0.998", color = "brown")
+    ax.axhline(y=0.975, linestyle = ':', color = 'r', label = "score considered as solved")
+    plt.legend()
+    plt.xlabel("episodes")
+    plt.ylabel("episode score")
 
+    '''heatMap'''
+    max_Q = np.amax(agent19.Q, axis=2)
+    colormap = plt.cm.hot
+    ax = sns.heatmap(max_Q, cmap=colormap)
+    plt.xlabel("dtheta(index)")
+    plt.ylabel("theta(index)")
+    plt.show()
+
+    agent19.plotQSurface(0,1,11)
+    agent19.plotQSurface(0,2,33)
+    agent19.plotQSurface(1,2,33)
+    
+    '''*********************************Reduced Q learning part**************************************************'''
+    
+    agent20 = qAgent("Pendulum-v0")
+    agent20.EXPLORE_DECAY = 0.9998
+    agent20.stateSpace = (np.linspace(-np.pi/3, np.pi/3, 33, False), np.linspace(-4, 4, 33, False))
+    agent20.state_bound = ([-np.pi/6,-1],[np.pi/6,1])
+    agent20.EPISODES_PER_LEARNING_MAX = 2000
+    agent20.build()
+    agent20.learning(([-np.pi/3,-4],[np.pi/3,4]))
+    agent20.offlineScore()
+    
